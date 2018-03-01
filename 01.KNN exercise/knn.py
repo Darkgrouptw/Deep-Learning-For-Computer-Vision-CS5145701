@@ -173,9 +173,9 @@ class KNearestNeighbor(object):
         # print((a.transpose() + b).transpose())
         X_train_transpose = np.transpose(self.X_train)
         X_transpose = np.transpose(X)
-        squreA = np.diag(np.dot(X, X_transpose))                            # 500, 1, only need diagonal
+        squreA = np.diag(np.dot(X, X_transpose))                            # 500, 1, only need the diagonal
         minus2AB = -2 * np.dot(X, X_train_transpose)                        # 500, 5000
-        squreB = np.diag(np.dot(self.X_train, X_train_transpose))           # 5000, 1, only need diagonal
+        squreB = np.diag(np.dot(self.X_train, X_train_transpose))           # 5000, 1, only need the diagonal
         dists = np.sqrt((squreA + minus2AB.transpose()).transpose() + squreB)
         #######################################################################
         #                         END OF YOUR CODE                            #
