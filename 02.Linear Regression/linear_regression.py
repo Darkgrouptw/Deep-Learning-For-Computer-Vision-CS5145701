@@ -143,8 +143,9 @@ class LinearRegression(object):
         #############################################################################
         # TODO: Compute for the loss.                                               #
         #############################################################################
-        loss = np.linalg.norm(prediction - y) ** 2 / 2 / N
-        # loss = np.sum((prediction - y)**2)
+        difference = prediction - y
+        # loss = np.linalg.norm(difference) ** 2 / 2 / N
+        loss = np.sum(difference ** 2) / 2 / N
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################
@@ -155,8 +156,9 @@ class LinearRegression(object):
         # results in the grads dictionary. For example, grads['W'] should store     #
         # the gradient on W, and be a matrix of same size.                          #
         #############################################################################
-
-        grads['W'] = np.dot(np.transpose(X), (prediction - y)) / N
+        # sum the all value of theta(theta1, theta2, ...)
+        # if i == 1, then X must to be transposed. (Because to get all value that influence theta1 is first column of X)
+        grads['W'] = np.dot(np.transpose(X), difference) / N
         
         #############################################################################
         #                              END OF YOUR CODE                             #
@@ -204,6 +206,13 @@ class LinearRegression(object):
             batchIndex = np.random.choice(num_train, batch_size)
             X_batch = X[batchIndex]
             y_batch = y[batchIndex]
+            # Test Code
+            # print(batchIndex)
+            # print(X[batchIndex[1]])
+            # print(y[batchIndex[1]])
+            # print(X_batch[1])
+            # print(y_batch[1])
+            # return
             #########################################################################
             #                             END OF YOUR CODE                          #
             #########################################################################
@@ -217,7 +226,9 @@ class LinearRegression(object):
             # using stochastic gradient descent. You'll need to use the gradients   #
             # stored in the grads dictionary defined above.                         #
             #########################################################################
+            # print(self.params['W'])
             self.params['W'] -= learning_rate * grads['W']
+            # print(self.params['W'])
             #########################################################################
             #                             END OF YOUR CODE                          #
             #########################################################################
