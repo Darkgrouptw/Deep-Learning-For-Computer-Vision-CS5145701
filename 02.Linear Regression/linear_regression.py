@@ -203,7 +203,7 @@ class LinearRegression(object):
             # them in X_batch and y_batch respectively.                             #
             # Hint: Look up the function numpy.random.choice                        #
             #########################################################################
-            batchIndex = np.random.choice(num_train, batch_size)
+            batchIndex = np.random.choice(num_train, batch_size, replace=False)
             X_batch = X[batchIndex]
             y_batch = y[batchIndex]
             # Test Code
