@@ -176,7 +176,7 @@ class RegularizedRegression(object):
         # TODO: Compute for the loss.                                               #
         #############################################################################
         difference = prediction - y                                                     # N, D
-        loss = (np.sum(difference ** 2)) / 2 / N + lambda_reg / np.dot(W.T, W)
+        loss = (np.sum(difference ** 2)) / 2 / N + lambda_reg / 2 * np.dot(W.T, W)
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################
