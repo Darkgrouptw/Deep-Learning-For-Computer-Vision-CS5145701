@@ -99,8 +99,6 @@ class LogisticRegression(object):
         #                              END OF YOUR CODE                             #
         #############################################################################
 
-
-
         return bce
 
     def loss(self, X, y=None):
