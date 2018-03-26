@@ -127,7 +127,8 @@ class LogisticRegression(object):
         # TODO: Compute for the predicted probabilities of belonging to class 1     #
         # given the current weights and bias.                                       #
         #############################################################################
-        probs = self.sigmoid(np.dot(X.T, W) + b)
+        value = np.matmul(X, W) + b
+        probs = self.sigmoid(value)
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################
@@ -148,8 +149,12 @@ class LogisticRegression(object):
         # the gradient on W, and be a matrix of same size.                          #
         #############################################################################
 
-        # grads['W'] = np.dot
-        # grads['b']
+        difference = probs - y
+
+        # Same as last time
+        differentMat = np.matmul(X.T, difference)
+        grads['W'] = differentMat / N
+        grads['b'] = np.sum(difference) / N
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################
@@ -196,7 +201,8 @@ class LogisticRegression(object):
             # using stochastic gradient descent. You'll need to use the gradients   #
             # stored in the grads dictionary defined above.                         #
             #########################################################################
-
+            self.params['W'] -= grads['W'] * learning_rate
+            self.params['b'] -= grads['b'] * learning_rate
             #########################################################################
             #                             END OF YOUR CODE                          #
             #########################################################################
