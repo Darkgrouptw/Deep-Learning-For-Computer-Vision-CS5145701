@@ -23,8 +23,8 @@ class MultinomialLogisticRegression(object):
         #############################################################################
         # TODO: Initialize the weight and bias.                                     #
         #############################################################################
-        self.params['W'] = None
-        self.params['b'] = None
+        self.params['W'] = np.random.randn(input_dim, num_classes) * std_dev
+        self.params['b'] = np.zeros(num_classes)
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################        
@@ -46,7 +46,11 @@ class MultinomialLogisticRegression(object):
         #############################################################################
         # TODO: Implement softmax which converts scores to probabilities.           #
         #############################################################################
-        probs = None
+        print(np.mean(x, axis=1))
+        print(x - np.mean(x, axis=1))
+        ExpValue = np.exp(x)
+        TotalExp = np.sum(ExpValue, axis=1)
+        probs = (ExpValue.T / TotalExp).T
         #############################################################################
         #                              END OF YOUR CODE                             #
         ############################################################################# 
