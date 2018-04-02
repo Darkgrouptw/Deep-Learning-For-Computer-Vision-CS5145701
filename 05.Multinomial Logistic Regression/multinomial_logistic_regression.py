@@ -46,9 +46,13 @@ class MultinomialLogisticRegression(object):
         #############################################################################
         # TODO: Implement softmax which converts scores to probabilities.           #
         #############################################################################
-        print(np.mean(x, axis=1))
-        print(x - np.mean(x, axis=1))
-        ExpValue = np.exp(x)
+        # Find Mean
+        mean = np.max(x, axis=1)
+
+        # Duplicate to two dimension array
+        repeatMean = np.repeat(mean, x.shape[1]).reshape(x.shape[0], -1)
+
+        ExpValue = np.exp(x - repeatMean)
         TotalExp = np.sum(ExpValue, axis=1)
         probs = (ExpValue.T / TotalExp).T
         #############################################################################
@@ -74,7 +78,8 @@ class MultinomialLogisticRegression(object):
         # TODO: Compute for the predictions of the model on new data using the      #
         # learned weight vectors.                                                   #
         #############################################################################
-        predictions = None
+        AfterSoftmax = self.softmax(np.matmul(X, self.params['W']) + self.params['b'])
+        predictions = np.argmax(AfterSoftmax, axis=1)
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################
@@ -106,7 +111,12 @@ class MultinomialLogisticRegression(object):
         # Store the result in the scores variable, which should be an array of      #
         # shape (N, C).                                                             #
         #############################################################################
-        score = None
+        C = len(b)
+        labelArray = np.array(y).reshape(N, -1)
+        score = np.zeros((N, C))
+        for i in range(D):
+            score[i] = np.bincount(labelArray[i], minlength=C)
+        predict = self.softmax(np.matmul(X, W) + b)
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################
@@ -117,7 +127,7 @@ class MultinomialLogisticRegression(object):
         # and L2 regularization for W. Store the result in the variable loss, 		#
         # which should be a scalar.                           						#
         #############################################################################
-        loss = None
+        loss = -np.sum(score * np.log(predict)) / N #+ np.sum(lambda_reg / 2 * np.dot(W.T, W))
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################
@@ -131,8 +141,12 @@ class MultinomialLogisticRegression(object):
         #																			#
         # Hint: You'll need fancy numpy indexing to compute for the gradients       #
         #############################################################################
-        grads['W'] = None
-        grads['b'] = None
+        # Same as last time
+        difference = score - predict
+        differentMat = np.matmul(X.T, difference)
+
+        grads['W'] = -differentMat / N #+ lambda_reg * W
+        grads['b'] = -np.sum(difference, axis=0) / N
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################
@@ -181,8 +195,8 @@ class MultinomialLogisticRegression(object):
             # using stochastic gradient descent. You'll need to use the gradients   #
             # stored in the grads dictionary defined above.                         #
             #########################################################################
-
-
+            self.params['W'] -= learning_rate * grads['W']
+            self.params['b'] -= learning_rate * grads['b']
             #########################################################################
             #                             END OF YOUR CODE                          #
             #########################################################################
