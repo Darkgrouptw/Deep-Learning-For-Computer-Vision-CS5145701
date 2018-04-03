@@ -114,8 +114,9 @@ class MultinomialLogisticRegression(object):
         C = len(b)
         labelArray = np.array(y).reshape(N, -1)
         score = np.zeros((N, C))
-        for i in range(D):
+        for i in range(N):
             score[i] = np.bincount(labelArray[i], minlength=C)
+        # print(score)
         predict = self.softmax(np.matmul(X, W) + b)
         #############################################################################
         #                              END OF YOUR CODE                             #
@@ -127,7 +128,7 @@ class MultinomialLogisticRegression(object):
         # and L2 regularization for W. Store the result in the variable loss, 		#
         # which should be a scalar.                           						#
         #############################################################################
-        loss = -np.sum(score * np.log(predict)) / N #+ np.sum(lambda_reg / 2 * np.dot(W.T, W))
+        loss = -np.sum(score * np.log(predict)) / N + lambda_reg / 2 * np.linalg.norm(W, ord="fro") #np.sum(np.dot(W.T, W))
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################
@@ -145,7 +146,7 @@ class MultinomialLogisticRegression(object):
         difference = score - predict
         differentMat = np.matmul(X.T, difference)
 
-        grads['W'] = -differentMat / N #+ lambda_reg * W
+        grads['W'] = -differentMat / N + lambda_reg * W
         grads['b'] = -np.sum(difference, axis=0) / N
         #############################################################################
         #                              END OF YOUR CODE                             #
@@ -183,8 +184,9 @@ class MultinomialLogisticRegression(object):
             indices = np.random.choice(num_train,batch_size, replace=False)
             X_batch = X[indices]
             y_batch = y[indices]
-            
+
             loss, grads = self.loss(X_batch, y=y_batch, lambda_reg=lambda_reg)
+
 
             if it % 10 == 0:
                 loss_history.append(np.squeeze(loss))
@@ -197,6 +199,7 @@ class MultinomialLogisticRegression(object):
             #########################################################################
             self.params['W'] -= learning_rate * grads['W']
             self.params['b'] -= learning_rate * grads['b']
+            # break
             #########################################################################
             #                             END OF YOUR CODE                          #
             #########################################################################
