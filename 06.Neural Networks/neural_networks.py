@@ -29,7 +29,13 @@ class NeuralNetwork(object):
         # For example, Weights and bias of layer 1 will be stored in                #
         # self.params["W1"] and self.params["b1"] respectively.                     #
         #############################################################################
+        # input_dim * hidden_size
+        self.params["W1"] = np.random.randn(input_dim, self.hidden_size) * std_dev
+        self.params["b1"] = np.zeros(self.hidden_size)
 
+        # hidden_size * num_classes
+        self.params["W2"] = np.random.randn(self.hidden_size, self.num_classes) * std_dev
+        self.params["b2"] = np.zeros(self.num_classes)
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################        
@@ -57,7 +63,7 @@ class NeuralNetwork(object):
         # the variables needed for the backward pass (gradient computation)         #
         # as a tuple inside cache.                                                  #
         #############################################################################
-        out = None
+        out = np.matmul(X, W) + b
         cache = (X, W, b)
         #############################################################################
         #                             END OF YOUR CODE                              #
@@ -82,13 +88,12 @@ class NeuralNetwork(object):
         - db: Gradient with respect to b, of shape (M,)
         """
         X, W, b = cache
-        dX, dW, db = None, None, None
         #############################################################################
         # TODO: Implement the affine backward pass.                                 #
         #############################################################################
-        dX = None
-        db = None
-        dW = None
+        dX = np.matmul(dUpper, W.T)
+        dW = np.matmul(X.T, dUpper)
+        db = np.sum(dUpper, axis=0)
         #############################################################################
         #                             END OF YOUR CODE                              #
         #############################################################################
@@ -109,7 +114,7 @@ class NeuralNetwork(object):
         #############################################################################
         # TODO: Implement the Sigmoid forward pass.                                 #
         #############################################################################
-        out = None
+        out = 1 / (1 + np.exp(-x))
         #############################################################################
         #                             END OF YOUR CODE                              #
         #############################################################################
@@ -132,13 +137,14 @@ class NeuralNetwork(object):
         #############################################################################
         # TODO: Implement the backward pass for the sigmoid function.               #
         #############################################################################
-        dsigmoid = None
+        # Since cache is sigmoid function
+        dsigmoid = dUpper * out * (1 - out)
         #############################################################################
         #                             END OF YOUR CODE                              #
         #############################################################################
         return dsigmoid
     
-    def softmax(self,x):
+    def softmax(self, x):
         
         """
         Compute the softmax function for each row of the input x.
@@ -154,7 +160,12 @@ class NeuralNetwork(object):
         #############################################################################
         # TODO: Implement the softmax function.                                     #
         #############################################################################
-        probs = None
+        meanValue = np.mean(x, axis=1)
+        x = (x.T - meanValue).T
+        ExpValue = np.exp(x)
+        totalExpValue = np.sum(np.exp(x), axis=1)
+
+        probs = (ExpValue.T / totalExpValue).T
         #############################################################################
         #                             END OF YOUR CODE                              #
         #############################################################################
@@ -181,7 +192,16 @@ class NeuralNetwork(object):
         #############################################################################
         # TODO: Compute for the softmax cross entropy loss                          #
         #############################################################################
-        loss = None
+        N, C = scores.shape
+
+        # Set One Hot encoding Vector
+        one_hot_encoding = np.zeros((N, C))
+        for i in range(N):
+            one_hot_encoding[i][labels[i]] = 1
+
+        # Calc Value
+        softmaxValue = self.softmax(scores)
+        loss = -np.sum(np.log(softmaxValue) * one_hot_encoding) / N
         #############################################################################
         #                             END OF YOUR CODE                              #
         #############################################################################
@@ -189,7 +209,7 @@ class NeuralNetwork(object):
         #############################################################################
         # TODO: Compute for the gradients of the loss with respect to the scores    #
         #############################################################################
-        dloss = None
+        dloss = (softmaxValue - one_hot_encoding) / N
         #############################################################################
         #                             END OF YOUR CODE                              #
         #############################################################################
@@ -214,8 +234,20 @@ class NeuralNetwork(object):
         # TODO: Perform a forward pass on the network and store the caches of       #
         # each layer inside the cache_list                                          #
         #############################################################################
-        scores = None
-        cache_list = []
+        ActivationFunction = None
+        if self.hidden_activation_fn == "sigmoid":
+            ActivationFunction = lambda x: self.sigmoid_forward(x)
+        elif self.hidden_activation_fn == "tanh":
+            ActivationFunction = lambda x: self.tanh_forward(x)
+        elif self.hidden_activation_fn == "relu":
+            ActivationFunction = lambda x: self.relu_forward(x)
+
+        Layer1Value, cacheL1 = self.fully_connected_forward(X, self.params["W1"], self.params["b1"])
+        Layer1ValueActivation, cacheL1A = ActivationFunction(Layer1Value)
+        scores, cacheL2 = self.fully_connected_forward(Layer1ValueActivation, self.params["W2"], self.params["b2"])
+
+        # Cache
+        cache_list =[cacheL1, cacheL1A, cacheL2]
         #############################################################################
         #                             END OF YOUR CODE                              #
         #############################################################################
@@ -241,6 +273,23 @@ class NeuralNetwork(object):
         # TODO: Implement the backward pass.                                        #
         #############################################################################
         grads = {}
+
+        # Set Activation Function
+        ActivationFunction_Backward = None
+        if self.hidden_activation_fn == "sigmoid":
+            ActivationFunction_Backward = lambda dx, cache: self.sigmoid_backward(dx, cache)
+        elif self.hidden_activation_fn == "tanh":
+            ActivationFunction_Backward = lambda dx, cache: self.tanh_backward(dx, cache)
+        elif self.hidden_activation_fn == "relu":
+            ActivationFunction_Backward = lambda dx, cache: self.relu_backward(dx, cache)
+
+        # X1    => Result from X1
+        # X1A   => Result from X1 Activation
+        X1, X1A, X2 = cache_list
+
+        dX, grads["W2"], grads["b2"] = self.fully_connected_backward(dloss, X2)
+        dX1A = ActivationFunction_Backward(dX, X1A)
+        _, grads["W1"], grads["b1"] = self.fully_connected_backward(dX1A, X1)
         #############################################################################
         #                             END OF YOUR CODE                              #
         #############################################################################
@@ -271,7 +320,7 @@ class NeuralNetwork(object):
         # Store the result in the scores variable, which should be an array of      #
         # shape (N, C).                                                             #
         #############################################################################
-        
+        scores, cache_list = self.network_forward(X)
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################
@@ -281,7 +330,8 @@ class NeuralNetwork(object):
         # TODO: Compute for the loss. This should include L2 regularization for     #
         # the weights of each layer.                                                #
         #############################################################################
-        loss = None
+        loss_softmax, dloss_softmax = self.softmax_cross_entropy_loss(scores, y)
+        loss = loss_softmax
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################
@@ -293,7 +343,7 @@ class NeuralNetwork(object):
         # the gradient on the weights W of the first layer, and be a matrix of      #
         # same size.                                                                #
         #############################################################################
-        grads = None
+        grads = self.network_backward(dloss_softmax, cache_list)
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################
@@ -315,13 +365,12 @@ class NeuralNetwork(object):
         #############################################################################
         # TODO: Implement the tanh forward pass.                                    #
         #############################################################################
-        out = None
+        out = np.tanh(x)
         #############################################################################
         #                             END OF YOUR CODE                              #
         #############################################################################
         cache = out
         return out, cache
-
 
     def tanh_backward(self, dUpper, cache):
         """
@@ -338,7 +387,9 @@ class NeuralNetwork(object):
         #############################################################################
         # TODO: Implement the tanh backward pass.                                   #
         #############################################################################
-        dtanh = None
+        #sech = 1 / np.cosh(cache)
+        sech2 = 1 - out * out
+        dtanh = dUpper * sech2
         #############################################################################
         #                             END OF YOUR CODE                              #
         #############################################################################
@@ -355,19 +406,21 @@ class NeuralNetwork(object):
         - out: A numpy array / matrix of the same shape as x
         - cache: x
         """
-        out = None
+        #out = None
         #############################################################################
         # TODO: Implement the ReLU forward pass.                                    #
         #############################################################################
-        out = None
+        out = x
+        #print("TEst")
+        out[out <= 0] = 0
+        #out = x
         #############################################################################
         #                             END OF YOUR CODE                              #
         #############################################################################
         cache = x
         return out, cache
 
-
-    def relu_backward(self,dUpper, cache):
+    def relu_backward(self, dUpper, cache):
         """
         Computes the backward pass for a layer of rectified linear units (ReLUs).
 
@@ -382,7 +435,11 @@ class NeuralNetwork(object):
         #############################################################################
         # TODO: Implement the ReLU backward pass.                                   #
         #############################################################################
-        drelu = None
+        tempMatrix = np.array(x, copy=True)
+        tempMatrix[tempMatrix > 0] = 1
+        tempMatrix[tempMatrix <= 0] = 0
+        #print(x)
+        drelu = dUpper * x
         #############################################################################
         #                             END OF YOUR CODE                              #
         #############################################################################

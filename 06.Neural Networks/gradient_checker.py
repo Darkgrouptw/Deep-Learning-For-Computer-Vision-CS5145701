@@ -21,7 +21,6 @@ def compute_numerical_gradient(generic_function, variable, h=1e-5):
     # You can compute for the output of the generic_function given the variable
     # as written below:
     # output = generic_function(variable)
-
     grad = np.zeros_like(variable)
 
     # A way to iterate through the elements of a numpy array / matrix
@@ -31,7 +30,7 @@ def compute_numerical_gradient(generic_function, variable, h=1e-5):
 
     it = np.nditer(variable, flags=['multi_index'], op_flags=['readwrite'])
     while not it.finished:
-        # Gets the index of the current element 
+        # Gets the index of the current element
         idx = it.multi_index
 
         #############################################################################
@@ -57,7 +56,7 @@ def compute_numerical_gradient(generic_function, variable, h=1e-5):
         variable[idx] = orgWeightValue - h
         leftValue = generic_function(variable)
 
-        grad[idx] = (rightValue - leftValue) / (h * 2)
+        grad[idx] = (rightValue - leftValue) / h / 2
         #############################################################################
         #                             END OF YOUR CODE                              #
         #############################################################################
